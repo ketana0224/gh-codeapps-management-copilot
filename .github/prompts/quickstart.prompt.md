@@ -1,6 +1,6 @@
 ---
 name: Quickstart
-description: "既存 .env の再利用または不足情報の入力・保存から、Code Apps 用 GitHub Repo・CI・初期ロック済みデプロイ Workflow を構築する"
+description: "管理用 Repo から .github をコピーし、既存 .env の再利用または不足情報の入力・保存から、Code Apps 用 GitHub Repo・CI・初期ロック済みデプロイ Workflow を構築する"
 agent: gh-management
 ---
 
@@ -8,29 +8,38 @@ Power Platform Code Apps 用の基本的な GitHub Repo と CI・デプロイ Wo
 これはクイックスタートの実行依頼です。説明・計画・設定ファイルの保存・コマンド例の提示だけで完了としないでください。
 必要な承認を得た後は、エージェント自身がツールを実行し、GitHub 上の Repo 作成と Workflow の反映まで進めてください。
 
-[gh-management-setup](../skills/gh-management-setup/SKILL.md) を読み込み、その手順・停止条件・完了条件に従ってください。
-スキルを読み込めない場合は不足を通知して停止し、別の標準リポジトリから取得しないでください。
-
 1. 対象プロジェクトの絶対パスを確定します。未指定なら現在のワークスペースを候補として質問ツールで確認し、
    この管理用リポジトリをアプリの作成先と決めつけないでください。
-2. スキルの [設定テンプレート](../skills/gh-management-setup/references/.env.example) と設定手順に従い、
+2. コピー元は [ketana0224/gh-codeapps-management-copilot](https://github.com/ketana0224/gh-codeapps-management-copilot) です。
+   `gh` CLI 等で `main` の完全コミット SHA を解決し、その SHA の `.github` フォルダ全体を取得して、
+   対象プロジェクト直下の `.github` へ実際にコピーします。エージェント・スキル・プロンプト・
+   references 内の `.env.example`・Workflow を含め、ドットで始まるファイルも省略しないでください。
+   Repo 全体やコピー元の `.git`・実際の `.env` はコピーせず、別の標準リポジトリへ無断で切り替えないでください。
+   コピー前に対象の Instructions と既存 `.github` を確認します。同一内容は維持し、不足ファイルは追加し、
+   内容が異なる既存ファイルは差分と統合案を提示して承認を得てから反映します。フォルダ全体の置換・削除はしません。
+   対象がコピー元リポジトリ自身の場合も未コミット変更を上書きせず、同じ競合確認を行います。
+   取得元 SHA、コピーしたファイル、競合の解決結果を記録し、取得失敗や未解決の競合があれば原因と再開点を示して停止します。
+3. コピー後、対象プロジェクト側の [gh-management-setup](../skills/gh-management-setup/SKILL.md) を読み込み、
+   その手順・停止条件・完了条件に従ってください。読み込めない場合は不足を通知して停止します。
+   スキルの [設定テンプレート](../skills/gh-management-setup/references/.env.example) と設定手順に従い、
    対象プロジェクト直下の `.env` があれば既存値を優先して利用します。
    なければ必要情報を質問ツールで確認し、回答を `.env` に記録します。
    既存ファイルでも不足・不正・照合不一致の項目だけを確認し、無関係なキーやコメントを壊さないでください。
-3. Repo 所有者・名前・公開範囲・ブランチ、Power Platform の環境名・環境 ID・テナント ID、
+4. Repo 所有者・名前・公開範囲・ブランチ、Power Platform の環境名・環境 ID・テナント ID、
    アプリの状態、GitHub Environment 名などを整理します。表示名だけで公開先を決めず、識別子と照合してください。
-4. `.env` の Git 除外を確認し、作成計画を提示して Repo 作成・リモート書き込みの明示承認を得ます。
-5. 承認した所有者・Repo 名・公開範囲で `gh repo create` 等を実行し、GitHub 上に実際の Repo を作成します。
+5. `.env` の Git 除外を確認し、作成計画を提示して Repo 作成・リモート書き込みの明示承認を得ます。
+6. 承認した所有者・Repo 名・公開範囲で `gh repo create` 等を実行し、GitHub 上に実際の Repo を作成します。
    既存 Repo の再利用は同一性と利用承認を確認してから行い、同名 Repo を無断で採用しないでください。
-6. 対象プロジェクトに Code Apps ソース、CI 用 `.github\workflows\codeapp-ci.yml`、
-   デプロイ用 `.github\workflows\codeapp-deploy.yml`、運用 README を実ファイルとして作成します。
+7. 対象プロジェクトに Code Apps ソースと運用 README を作成し、コピーした CI 用 `.github\workflows\codeapp-ci.yml`、
+   デプロイ用 `.github\workflows\codeapp-deploy.yml` を対象プロジェクトの構成に合わせて整えます。
+   CI の参照スクリプト・package scripts・ロックファイルが対象に存在することを確認し、存在しない処理をそのまま残さないでください。
    既存 Workflow がある場合は内容を確認して統合し、利用者の変更を上書きしないでください。
    初期デプロイ Workflow は未準備理由を示して失敗する診断処理のみとし、公開コマンドや秘密参照を含めないでください。
-7. ローカルの最小検証後、承認済みの変更ファイルだけをステージング・コミットし、承認したリモートとブランチへ push します。
+8. ローカルの最小検証後、承認済みの変更ファイルだけをステージング・コミットし、承認したリモートとブランチへ push します。
    `.env` や認証情報、無関係な既存変更を含めないでください。
-8. GitHub 上の Repo と対象ブランチのコミットを照合し、両 Workflow の内容が反映されたことを確認します。
+9. GitHub 上の Repo と対象ブランチのコミットを照合し、両 Workflow の内容が反映されたことを確認します。
    CI の実行結果も確認し、失敗・実行不能・未確認は明示してください。ロック済みデプロイ Workflow を公開確認のために起動しないでください。
-9. Repo URL、反映済みコミット SHA、設定保存先、両 Workflow のパスと GitHub URL、
+10. Repo URL、反映済みコミット SHA、`.github` の取得元 SHA とコピー結果、設定保存先、両 Workflow のパスと GitHub URL、
    CI の run URL と検証結果、人の残作業と再開点を報告します。
 
 **Repo と両 Workflow が GitHub 上へ反映され、CI 成功を確認するまで「初期作成完了」と報告しないでください。**
