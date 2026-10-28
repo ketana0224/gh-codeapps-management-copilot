@@ -1,3 +1,4 @@
+# Setup reference only. Activate after the application and CI scripts exist.
 name: Code App CI
 
 on:

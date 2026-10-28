@@ -1,6 +1,6 @@
 ---
 name: gh-management
-description: "Power Platform Code Apps の GitHub 管理を統括するエージェント。Use when: GitHub Management、Repo 作成、CI・Workflow 作成、アプリ変更と PR 作成、CI 成功で自動マージ・自動デプロイ、公開済み Code Apps の継続更新。gh-management-setup と gh-management-deploy を依頼と準備状況に応じて使い分ける。"
+description: "Power Platform Code Apps の GitHub 管理を統括するエージェント。Use when: GitHub Management、Template から Clone 済み Repo の初期設定、共通 Agent・Skill・Prompt の更新、Repo 作成、CI・Workflow 作成、アプリ変更と PR 作成、CI 成功で自動マージ・自動デプロイ、公開済み Code Apps の継続更新。setup・deploy と共通定義更新の手順を依頼に応じて使い分ける。"
 argument-hint: "変更内容、PR・CI 成功後マージ・自動デプロイ、対象プロジェクト、owner/repo、公開先。手動公開の場合は完全コミット SHA"
 user-invocable: true
 ---
@@ -31,6 +31,10 @@ Power Platform Code Apps の GitHub 管理窓口として、初期準備、デ�
    [テンプレート](../skills/gh-management-setup/references/.env.example) に従い非秘密の設定を再利用します。
    setup では不足情報を質問して `.env` へ保存します。deploy でも保存値は候補として扱い、
    実際の公開先・保護・権限・対象 SHA・実行承認の再確認を省略しません。
+   Template から作成・Clone 済みの Repo の初期設定は setup の `reuse` モードです。
+   配布元からの再コピーや Repo の再作成をせず、同梱の共通定義を使用します。
+   共通定義の更新依頼は [UpdateCustomizations](../prompts/update-customizations.prompt.md) に従い、
+   setup・deploy に進めたり、アプリの初期化や公開を併せて行ったりしません。
 2. Repo 作成、初期設定、CI・Workflow の新設、既存アプリへの GitHub 管理導入は
    `gh-management-setup` を選択します。アプリが公開済みでも初期管理導入は setup です。
 3. 初期準備済みの既存アプリの変更・PR 作成・CI 成功後マージ・自動デプロイの追跡は

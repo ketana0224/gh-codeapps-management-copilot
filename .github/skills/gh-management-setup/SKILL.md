@@ -1,6 +1,6 @@
 ---
 name: gh-management-setup
-description: "Power Platform Code Apps の開発開始時に GitHub Repo と CI・デプロイ用 Workflow を作成する Digital Worker。WHEN: GitHub Management Copilot の初期設定、Code Apps のリポジトリを作って、開発環境を準備、ワークフローを作成、bootstrap Code Apps repository、setup GitHub Actions。DO NOT USE FOR: 通常の継続更新、Code Apps 以外の資産、未検証の完全無人初回公開、削除や権限昇格。"
+description: "Power Platform Code Apps の Template から作成・Clone 済みの Repo を初期設定し、ソースと CI・デプロイ用 Workflow を準備する。明示依頼時は Repo 新規作成にも対応。WHEN: Quickstart、テンプレートから開発開始、既存 Repo の初期設定、Code Apps のリポジトリを作って、bootstrap Code Apps repository、setup GitHub Actions。DO NOT USE FOR: 通常の継続更新、共通定義の更新、Code Apps 以外の資産、未検証の完全無人初回公開、削除や権限昇格。"
 argument-hint: '<GitHub owner/repo、公開範囲、対象環境、新規または既存アプリ>'
 user-invocable: true
 ---
@@ -9,7 +9,9 @@ user-invocable: true
 
 ## このスキルの目的
 
-VS Code を利用する市民開発者向けに、Power Platform Code Apps のソース管理と継続更新の入口を準備します。**リポジトリとワークフローを実際に作成する業務**です。既存ワークフローの起動だけでは完了としません。
+VS Code を利用する市民開発者向けに、Power Platform Code Apps のソース管理と継続更新の入口を準備します。
+標準経路は **Template から作成・Clone 済みの Repo を再利用し、ソースとワークフローを実際に反映する業務**です。
+Repo の新規作成は明示依頼された `create` モードだけで行います。既存ワークフローの起動だけでは完了としません。
 
 人による初回公開・権限共有と、後続の無人更新を分離します。初期状態ではデプロイできないワークフローを作成し、検証後に `gh-management-deploy` へ引き継ぎます。
 
@@ -21,11 +23,13 @@ VS Code を利用する市民開発者向けに、Power Platform Code Apps の�
 
 - 「Code Apps のRepoとWorkflowを作って」「GitHub Management Copilotを初期設定して」と依頼された場合です。
 - 新規開発の開始、または既存アプリへのGitHub管理の導入を依頼された場合です。
+- Template から作成・Clone した Repo で `/Quickstart` を実行した場合です。
 - `bootstrap Code Apps repository`、`setup GitHub Actions` と依頼された場合です。
 
 ## 使用しないケース (DO NOT USE FOR)
 
 - 初期設定済みアプリの通常更新です。`gh-management-deploy` を使用します。
+- Agent・Skill・Prompt の共通更新です。`UpdateCustomizations` Prompt を使用します。
 - Canvas Apps、モデル駆動型アプリ、その他の資産の初期化です。
 - Repo・アプリの削除、権限の自己昇格、承認の迂回です。
 - 未検証のSP初回公開や新CLIのOIDCを前提とするゼロタッチ構築です。
@@ -68,6 +72,8 @@ VS Code を利用する市民開発者向けに、Power Platform Code Apps の�
    Git 未初期化なら規則を先に配置し、初期化後・ステージング前に確認します。
    既に追跡されている場合は ignore だけでは保護できない旨を通知して保存・push を停止し、追跡解除の承認を求めます。
 6. Repo 所有者・名前・公開範囲・ブランチを Git リモートと GitHub に照合します。
+   Template から Clone 済みの標準経路では `GITHUB_REPO_MODE=reuse` を候補として確認します。
+   `create` の既存値や別 Repo の識別子を無言で上書きせず、不一致を質問します。
    Power Platform 環境名は表示用であり、テナント ID・環境 ID と読み取り結果を照合します。
    表示名だけ、または現在の認証先だけで対象を確定しません。GitHub Environment 名とは別項目です。
 7. 条件付きの項目は必要な段階で質問し保存します。新規アプリのアプリ ID は初回公開で確認後に追記し、
@@ -99,28 +105,41 @@ GitHub プラン、作成権限、Code Apps 有効化、ライセンス／課金
 ### 2. 作成計画の承認
 
 1. 入力表の不足項目を確認します。
-2. 同名Repoが存在するか確認します。
-3. 既存Repoがあれば所有者、リモート、ファイルを照合し、再開・接続・中止のいずれかを確認します。
+2. `reuse` では `origin` と GitHub 上の既存 Repo の所有者・名前・公開範囲・ブランチを照合します。
+   リモート未設定・識別子不一致なら停止し、無断で作成・接続しません。
+   共通配布元 `ketana0224/gh-codeapps-management-copilot` 自身をアプリとして初期化しません。
+3. `create` は Repo 新規作成が明示依頼された場合だけ選びます。同名 Repo があれば
+   所有者・リモート・ファイルを照合し、再利用・中止を確認します。
 4. 作成先、公開範囲、追加ファイル、必要権限、人が行う初回作業を表示します。
-5. Repo作成とリモートへの書き込みについて明示承認を取得します。
+5. `reuse` は既存 Repo の利用と変更・リモート書き込み、`create` は Repo 作成とリモート書き込みの明示承認を取得します。
 
 同名という理由だけで既存Repoを採用しません。利用者の変更を上書きせず、force push、公開範囲変更、削除、権限変更を作成承認に含めません。
 
 ### 3. Repoと開発ソースの作成
 
-1. 承認した所有者・名前・公開範囲で `gh repo create` 等の検証済み手段を実行します。
+1. `reuse` は照合済み Repo を利用し、`gh repo create`、`git init`、`origin` の付け替えを行いません。
+   `create` の場合だけ、承認した所有者・名前・公開範囲で `gh repo create` 等の検証済み手段を実行します。
 2. 新規アプリでは公式Code Appsテンプレートを、既存ファイルと競合しない場所へ取得します。
+   GitHub の Repo テンプレートは共通定義の配布用であり、Code Apps のアプリ雛形とは別です。
+   空でない Repo ルートへ scaffold を強行せず、一時ディレクトリで生成して差分を確認・統合します。
+   `.git`・`.github`・既存 README・ローカル設定を上書きせず、一時ファイルは処理後に削除します。
 3. 既存アプリでは既存プロジェクトの構成を維持します。
 4. プロジェクトのパッケージ管理方式で依存関係とロックファイルを整えます。
-5. ツール版、所有者、対象識別子、秘密を含めない設定方針、運用手順をREADMEへ記録します。
+5. ツール版、所有者、対象識別子、秘密を含めない設定方針、運用手順をREADMEへ統合します。
+   同梱の共通定義の利用・更新手順を削除せず、既存文書と競合する変更は確認します。
 6. `.gitignore` に従って秘密・ローカル認証情報・不要な生成物を除外します。
 
 公式例の `degit` によるサブディレクトリ取得を、未確認の `gh repo create --template` に置き換えません。依存導入は既存方式に従い、グローバルツールの更新を無断で行いません。
 
 ### 4. 初期ロック付きWorkflowの作成
 
-1. `.github\workflows` にCI用YAMLを作成します。
-2. 既存のビルド・型検査・テストをCIへ接続します。
+1. [アプリ CI の雛形](references/workflows/codeapp-ci.yml) を読み、
+   `.github\workflows\codeapp-ci.yml` に配置します。既存ファイルがあれば差分を確認して統合します。
+2. アプリのソース、package scripts、ロックファイル、CI スクリプトを準備し、
+   実在するビルド・型検査・テストを CI へ接続します。雛形にある未実装のコマンドを残しません。
+   push・pull_request のブランチ条件も照合済みの対象ブランチへ合わせ、`main` を無条件に採用しません。
+   `.github\workflows\customizations-ci.yml` は共通定義だけの検証です。
+   維持したままアプリ CI を追加し、共通定義 CI の成功をアプリ CI 成功と報告しません。
 3. デプロイ用YAMLを手動起動可能な初期ロック状態で作成します。
 4. 初期デプロイWorkflowを、未準備理由を明示して失敗する診断処理だけで構成します。
 5. 必要最小限のWorkflow権限と秘密を出力しない設定を適用します。
@@ -146,14 +165,15 @@ Environmentは完全一致の名前で確認します。未作成名の参照に
 
 ### 6. 検証と引き継ぎ
 
-1. CIに接続した最小の検証コマンドを実行します。
+1. `node --test .github\tests\customizations.test.mjs` と、アプリ CI に接続した最小の検証コマンドを実行します。
 2. 初期ロック状態に公開処理と秘密参照がないことを確認します。
 3. 作成差分に秘密や意図しない公開資産がないことを確認します。
 4. 承認済みの変更ファイルだけをステージング・コミットし、承認したリモートとブランチへ push します。
    `.env`、認証情報、無関係な既存変更を含めません。
    GitHub 上の Repo と対象ブランチのコミット SHA を照合し、CI とデプロイの両 Workflow が
    意図した内容で反映されていることを確認します。コマンド例の提示やローカルへの保存だけで完了としません。
-   CI の run ID・URL を対象コミットと照合して結果を確認し、失敗・実行不能・未確認は明示します。
+   アプリ CI の run ID・URL を対象コミットと照合して結果を確認し、失敗・実行不能・未確認は明示します。
+   共通定義 CI だけの成功や、アプリ CI が存在しない状態では初期作成完了にしません。
    初期ロック済みデプロイ Workflow は公開確認のために起動しません。
 5. Repo URL、コミットSHA、Workflowパス、`.env` の保存先、初回作業の実施状況を記録します。確認済みのアプリIDなどを `.env` に追記します。
 6. 対象識別子、保護方針、未解決項目を `gh-management-deploy` へ引き継ぎます。
