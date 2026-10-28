@@ -3,7 +3,7 @@
 Power Platform Code Apps 用の Agent・Skill・Prompt と CI 雛形を、GitHub Template Repository として共通配布します。
 
 ```text
-この Template Repo
+社内テンプレート Repo（YOUR-ORG/template-gh-codeapps-copilot）
   → Use this template → アプリごとの新規 Repo
   → Clone → VS Code → /Quickstart
 
@@ -15,16 +15,80 @@ Power Platform Code Apps 用の Agent・Skill・Prompt と CI 雛形を、GitHub
 
 ## 管理者によるテンプレート公開
 
-1. 本変更をレビュー・マージし、共通定義 CI の成功を確認します。
-2. GitHub の **Settings → General → Template repository** を有効にします。
+1. [社内配布用 Repo の作成手順](#社内配布用-repo-の作成手順) に従い、
+   **公開元**（このRepo）を Clone し、社内配布用 Repo を新規作成して push します。
+   配布する共通定義をレビューし、社内 Repo への反映後に共通定義 CI の成功を確認します。
+2. GitHub で **社内配布用 Repo**（例: `YOUR-ORG/template-gh-codeapps-copilot`）を開きます。
+   Repo 上部の **Settings** タブ → 左メニューの **General** →
+   **Template repository** にチェックを入れます。
+   **個人アカウントや Organization 全体の Settings ではなく、配布元 Repo の Settings です。**
+   社内 Repo の設定 URL は `https://github.com/YOUR-ORG/template-gh-codeapps-copilot/settings` です。
+   項目は **Repository name** の下付近にあります。Settings が表示されない場合は Repo の管理者権限を確認してください。
+   設定後、Repo の **Code** タブで **Use this template** が表示されることを確認します。
    この文書やファイルの変更だけでは GitHub 上の設定は変わりません。
-3. [管理情報](.github/customizations.json) の `version` を配布版として管理します。
-   変更時は版を更新し、その版に対応したリリースタグ（例: `v1.0.0`）を対象コミットへ付けて公開します。
-   ファイル内の版番号だけではタグや GitHub Release は作成されません。
+3. 社内テンプレート Repo の [`.github/customizations.json`](.github/customizations.json) の
+   `version` を配布版として管理します。
+   編集場所、版番号の目安、タグの公開方法は [配布版の公開手順](#配布版の公開手順) を参照してください。
 4. テンプレートから試験 Repo を作成し、アプリ生成前の共通定義 CI、
    Clone 後のカスタマイズ認識、Quickstart による既存 Repo 再利用を確認します。
 
 テンプレートにはアプリ本体を含めません。Code Apps のアプリ雛形は初期設定時に別途取得します。
+
+### 自社環境での Repo の役割
+
+**公開元**（このRepo）をローカルへ Clone し、自社 GitHub 上に新規作成する社内配布用 Repo
+`YOUR-ORG/template-gh-codeapps-copilot` へ push します。ファイルだけのコピーではなく、push するブランチのコミット履歴も引き継ぎます。
+`YOUR-ORG` は自社の GitHub Organization 名、`template-gh-codeapps-copilot` は社内配布用 Repo 名の例です。
+公開元から各アプリ Repo を直接作成するのではなく、まず社内配布用 Repo を用意します。
+
+```text
+【管理者：社内配布用 Repo を準備】
+公開元：ketana0224/gh-codeapps-management-copilot（このRepo）
+    ↓ git clone
+PC 上のローカル Repo：template-gh-codeapps-copilot
+    ↓ 公開元のリモート名を origin から public-upstream に変更
+    ↓ 作成済みの空の社内 Repo を origin として登録して push
+社内配布用 Repo：YOUR-ORG/template-gh-codeapps-copilot（自社 GitHub 上）
+    ↓ この社内 Repo の Settings で Template repository を有効化
+社内テンプレートとして配布可能
+
+【利用者：アプリ開発用 Repo を作成】
+YOUR-ORG/template-gh-codeapps-copilot を開く
+    ↓ Use this template → Create a new repository
+YOUR-ORG/my-codeapp が作成される（アプリ開発用の別 Repo）
+    ↓ このアプリ Repo を PC に Clone
+VS Code で開く → /Quickstart
+```
+
+Template 設定は **共通定義を配る社内 Repo** で行います。
+各利用者が作成するアプリ Repo や、ローカルへ Clone したフォルダの設定ではありません。
+以降の例では、社内配布用 Repo を `YOUR-ORG/template-gh-codeapps-copilot` とします。実際の Organization・Repo 名に読み替えてください。
+
+なお、現在の共通更新元は公開元の `ketana0224/gh-codeapps-management-copilot` に固定されています。
+社内 Repo を共通更新元にもする場合は、配布前に
+[管理情報](.github/customizations.json)、[更新 Prompt](.github/prompts/update-customizations.prompt.md)、
+[Quickstart](.github/prompts/quickstart.prompt.md)、[setup Skill](.github/skills/gh-management-setup/SKILL.md)、
+[検証テスト](.github/tests/customizations.test.mjs) の配布元識別子・ガード・検証条件も社内 Repo に合わせます。
+README の URL を読み替えるだけでは、共通更新元や配布元自身の初期化防止条件は変わりません。
+
+### 社内配布用 Repo の作成手順
+
+事前に GitHub 上で、README 等を追加せず空の社内 Repo `YOUR-ORG/template-gh-codeapps-copilot` を作成します。
+`YOUR-ORG` は自社の GitHub Organization 名に置き換えてください。
+Git の認証を済ませ、`template-gh-codeapps-copilot` フォルダがまだない作業場所で実行します。
+
+```powershell
+git clone --branch main https://github.com/ketana0224/gh-codeapps-management-copilot.git template-gh-codeapps-copilot
+Set-Location .\template-gh-codeapps-copilot
+git remote rename origin public-upstream
+git remote add origin https://github.com/YOUR-ORG/template-gh-codeapps-copilot.git
+git push -u origin main
+```
+
+`public-upstream` は公開元、`origin` は社内配布用 Repo を指します。
+`rename` はローカルの接続名だけを変更し、push は `main` とその履歴を社内 Repo へ送信します。
+完了後、社内 Repo の **Settings → General → Template repository** を有効にします。
+共通更新元を社内 Repo に切り替える設定変更は、前述のとおり配布前に別途行います。
 
 ## 利用者のクイックスタート
 
@@ -35,7 +99,7 @@ CLI を使う場合は、テンプレート公開後に次のように実行し�
 
 ```powershell
 gh repo create YOUR-ORG/my-codeapp `
-  --template ketana0224/gh-codeapps-management-copilot `
+  --template YOUR-ORG/template-gh-codeapps-copilot `
   --private `
   --clone
 
@@ -43,7 +107,7 @@ Set-Location .\my-codeapp
 code .
 ```
 
-コピー元 Repo 自身ではなく、**作成したアプリ Repo のルート**を VS Code で開きます。
+公開元や社内テンプレート Repo ではなく、**作成したアプリ Repo のルート**を VS Code で開きます。
 Git、GitHub CLI、Node.js、Copilot を利用できる VS Code と認証を準備してください。
 Code Apps CLI 等の必要版・権限は setup 時に確認します。テンプレートには認証情報を含めません。
 
@@ -110,7 +174,71 @@ GitHub Actions の実行・アプリの公開を証明するものではあり�
 - `managedPaths`: Agent・Prompt・Skill（付属 references を含む）・共通定義テストです。
   管理対象内でも利用側の変更を無断で上書きしません。
 
+### 配布版の公開手順
+
+**社内テンプレート Repo の管理者が行う作業です。各アプリ Repo の版番号を手動変更する作業ではありません。**
+版番号は自動採番されないため、共通定義の変更時に管理者が更新します。
+社内 Repo を共通更新元にするための設定変更は、前述の [自社環境での Repo の役割](#自社環境での-repo-の役割) を参照してください。
+
+1. **管理情報を開きます。**
+   - GitHub: 社内テンプレート Repo の **Code → `.github` → `customizations.json`** を開き、
+     鉛筆アイコン（Edit）を選択します。
+   - VS Code: 社内テンプレート Repo を Clone して開き、
+     エクスプローラーから **`.github` → `customizations.json`** を選択します。
+   - GitHub 上の配置例は `https://github.com/YOUR-ORG/template-gh-codeapps-copilot/blob/main/.github/customizations.json` です。
+     Organization・Repo 名・ブランチは実際のものへ読み替えます。
+2. **共通定義の変更内容に応じて `version` を変更します。** 目安は次のとおりです。
+
+   | 変更内容 | 版番号の例 |
+   |---|---|
+   | 初回配布 | `1.0.0` |
+   | 説明・不具合の修正 | `1.0.0` → `1.0.1` |
+   | 互換性を保った機能追加 | `1.0.1` → `1.1.0` |
+   | 利用手順が変わるなど、互換性のない変更 | `1.1.0` → `2.0.0` |
+
+   例えば小さな修正を配布する場合、ファイル内の該当行を `"version": "1.0.1",` に変更します。
+   配布版番号の変更だけを理由に `upstream` や `upstreamCommit` を書き換えません。
+   初回配布なら、既存の `1.0.0` を確認してそのまま使用できます。
+3. **共通定義と版番号の変更を一緒に commit・push し、レビュー・マージします。**
+   GitHub の編集画面では新規ブランチへコミットして PR を作成します。
+   VS Code では共通定義の検証を実行し、ソース管理で今回の変更だけをコミット・push して PR を作成します。
+
+   ```powershell
+   node --test .github\tests\customizations.test.mjs
+   ```
+
+4. **配布対象コミットの共通定義 CI 成功を確認します。**
+   社内テンプレート Repo の **Actions → Customizations CI** を開き、
+   マージ先ブランチの対象コミットと成功した run の SHA が一致することを確認します。
+   その完全 SHA を控えます。PR の CI 成功だけで、別のマージ後コミットを検証済みと扱いません。
+5. **確認したコミットに、版番号と対応するタグを付けて公開します。**
+   以下は `1.0.1` を配布する例です。社内テンプレート Repo のローカル Clone で実行します。
+   事前に `git remote -v` で `origin` が社内テンプレート Repo を指すことを確認してください。
+
+   ```powershell
+   git fetch origin
+   $releaseCommit = 'CI成功を確認した40桁の完全コミットSHAに置き換える'
+   git tag -a v1.0.1 $releaseCommit -m "Shared customizations v1.0.1"
+   git push origin v1.0.1
+   ```
+
+   タグ先コミットの管理情報が `1.0.1` であることを確認してから実行します。
+   初回 `1.0.0` ならタグ名も `v1.0.0` に読み替えます。
+   **JSON の `1.0.1` とタグの `v1.0.1` を対応させ、公開済みタグは付け替えません。**
+   修正を追加する場合は新しい版を公開します。既存タグと衝突した場合も force push しません。
+6. **GitHub の Code → Tags で、公開したタグと対象コミットを確認します。**
+   利用者へ版番号・タグ・変更内容・必要な移行手順を案内します。
+   GitHub Release を作成する場合は、そのタグを選択してリリースノートを追加します。
+   JSON の編集やタグの push だけで GitHub Release が自動作成されるわけではありません。
+
+新しく Template から Repo を生成する際は、タグではなくテンプレートの既定ブランチの内容が使われます。
+既定ブランチには配布可能な内容を維持し、既存アプリ Repo への更新は公開済みタグを指定して行います。
+
+### 利用者による共通定義の更新
+
 各アプリ Repo で `/UpdateCustomizations` を実行し、公開済みタグまたは完全 SHA を指定します。
+例えば「共通定義を `v1.0.1` に更新してください」と依頼します。
+利用者が管理情報の版番号だけを手動変更しても、Agent・Skill・Prompt の内容は更新されません。
 [更新 Prompt](.github/prompts/update-customizations.prompt.md) がタグを完全 SHA に固定し、
 差分・競合を提示します。承認後に更新・検証・作業ブランチへの push・PR 作成を行い、
 マージはレビュー後に実施します。ローカル更新だけの依頼では push しません。
