@@ -41,7 +41,9 @@ test('shared definitions have names, quoted descriptions and valid skill names',
 });
 
 test('customization links resolve inside the repository', () => {
-  for (const path of [...customizations, resolve(root, '.github/skills/README.md')]) {
+  const documents = ['.github/skills/README.md', 'README.md', '利用手順.md']
+    .map((path) => resolve(root, path));
+  for (const path of [...customizations, ...documents]) {
     const content = readFileSync(path, 'utf8');
     for (const [, target] of content.matchAll(/\[[^\]]+\]\(([^)\s]+)\)/g)) {
       if (/^(?:[a-z][a-z0-9+.-]*:|#)/i.test(target)) continue;
@@ -52,6 +54,11 @@ test('customization links resolve inside the repository', () => {
       assert.ok(existsSync(destination), `${relative(root, path)}: broken link: ${target}`);
     }
   }
+});
+
+test('application README keeps access to the standalone usage guide', () => {
+  assert.ok(existsSync(resolve(root, '利用手順.md')), 'The standalone usage guide must remain available');
+  assert.match(read('README.md'), /\[[^\]]+\]\((?:\.\/)?(?:利用手順\.md|%E5%88%A9%E7%94%A8%E6%89%8B%E9%A0%86\.md)(?:#[^)]*)?\)/i);
 });
 
 test('prompt agents exist in the shared bundle', () => {

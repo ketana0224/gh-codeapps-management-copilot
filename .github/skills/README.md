@@ -2,7 +2,7 @@
 
 この Repo に同梱する Power Platform Code Apps 用 Skill の一覧です。
 Template Repo からアプリ Repo を作成・Clone し、VS Code で利用します。
-全体の運用手順は [README](../../README.md) を参照してください。
+全体の運用手順は [利用手順](../../利用手順.md) を参照してください。
 
 | Skill | 使用する場面 | 主な完了条件 |
 |---|---|---|

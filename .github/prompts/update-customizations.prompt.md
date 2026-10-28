@@ -24,7 +24,7 @@ agent: gh-management
    上流の削除も削除候補として提示し、利用側の追加ファイルを勝手に削除しません。
 5. 追加・変更・削除候補、版、取得元 SHA、競合、ローカルで維持する差分を提示し、
    反映・作業ブランチへの push・PR 作成の承認を得ます。ローカル更新だけの依頼なら push しません。
-   実運用の `.github/workflows`、アプリソース、README、`.env`、Secrets、Environment、保護設定は変更しません。
+   実運用の `.github/workflows`、アプリソース、README、`利用手順.md`、`.env`、Secrets、Environment、保護設定は変更しません。
    references 内の Workflow 雛形の更新は、実運用 Workflow への反映・ロック解除の承認ではありません。
 6. 承認済み差分を作業ブランチで反映します。[管理情報](../customizations.json) の version を取得元に合わせ、
    upstreamCommit に取得した完全 SHA を記録します。ローカル差分を残した場合は PR 本文に明記し、
